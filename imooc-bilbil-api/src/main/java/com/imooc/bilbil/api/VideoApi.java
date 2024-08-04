@@ -5,8 +5,8 @@ import com.imooc.bilbil.dao.VideoDao;
 import com.imooc.bilbil.domain.*;
 import com.imooc.bilbil.domain.constant.UserMomentsConstant;
 import com.imooc.bilbil.domain.exception.ConditionException;
+import com.imooc.bilbil.service.UserService;
 import com.imooc.bilbil.service.util.FastDFSUtil;
-import com.imooc.bilbil.service.util.ImageUtil;
 import com.imooc.bilbil.service.util.IpUtil;
 import eu.bitwalker.useragentutils.UserAgent;
 import org.apache.mahout.cf.taste.common.TasteException;
@@ -60,8 +60,6 @@ public class VideoService {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private ImageUtil imageUtil;
 
     @Autowired
     private FileService fileService;
