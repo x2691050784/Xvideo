@@ -41,11 +41,12 @@ public class MD5Util {
 //	获取文件进行md5加密
 	public static String getFileMD5(MultipartFile file)throws Exception{
 		InputStream fis=file.getInputStream();
+		//bit数组
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		byte[] bytes = new byte[1024];
+		byte[] bytes = new byte[1024];//每次读1024
 		int byteRead;
 		while ((byteRead= fis.read(bytes))>0){
-			byteArrayOutputStream.write(bytes,0,byteRead);
+			byteArrayOutputStream.write(bytes,0,byteRead);//数据 偏移量 大小
 		}
 		fis.close();
 //		进行MD5加密

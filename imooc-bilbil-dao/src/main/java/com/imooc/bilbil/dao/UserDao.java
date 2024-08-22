@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.imooc.bilbil.domain.RefreshTokenDetail;
 import com.imooc.bilbil.domain.User;
 import com.imooc.bilbil.domain.UserInfo;
+import com.imooc.bilbil.domain.VideoBinaryPicture;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -44,4 +45,7 @@ public interface UserDao {
     Integer addRefreshToken(@Param("refreshToken") String refreshToken, @Param("userId") Long userId, @Param("createTime") Date date);
 
     RefreshTokenDetail getRefreshTokenDetail(String refreshToken);
+    List<UserInfo> batchGetUserInfoByUserIds(Set<Long> userIdList);
+
+
 }

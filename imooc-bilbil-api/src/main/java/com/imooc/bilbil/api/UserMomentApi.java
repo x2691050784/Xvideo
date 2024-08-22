@@ -2,6 +2,7 @@ package com.imooc.bilbil.api;
 
 import com.imooc.bilbil.api.support.UserSupport;
 import com.imooc.bilbil.domain.JsonResponse;
+import com.imooc.bilbil.domain.PageResult;
 import com.imooc.bilbil.domain.UserMoment;
 import com.imooc.bilbil.domain.anotation.ApiLimitedRole;
 import com.imooc.bilbil.domain.anotation.DataLimited;
@@ -12,10 +13,7 @@ import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -53,6 +51,16 @@ public class UserMomentApi
     public JsonResponse<List<UserMoment>> getUserSubscribedMoments(){
         Long userId=userSupport.getCurrentUserId();
         List<UserMoment> list=userMomentsService.getUserSubscribedMoments(userId);
+        return new JsonResponse<>(list);
+    }
+
+    @GetMapping("/moments")
+    public JsonResponse<PageResult<UserMoment>> pageListMoments(@RequestParam("size") Integer size,
+                                                                @RequestParam("no") Integer no,
+                                                                String type){
+        Long userId = userSupport.getCurrentUserId();
+        PageResult<UserMoment> list = userMomentsService.pageListMoments(size, no,
+                userId, type);
         return new JsonResponse<>(list);
     }
 }

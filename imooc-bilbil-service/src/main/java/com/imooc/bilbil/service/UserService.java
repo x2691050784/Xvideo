@@ -126,7 +126,7 @@ private UserAuthService userAuthService;//用于添加默认角色
     }
 
     public void updateUserInfos(UserInfo userInfo) {
-        userInfo.setUpdateTime(new Date());
+
         userDao.updateUserInfos(userInfo);
 
     }
@@ -213,6 +213,9 @@ private UserAuthService userAuthService;//用于添加默认角色
         }
         Long userId=refreshTokenDetail.getUserId();
         return TokenUtil.generateToken(userId);
+    }
+    public List<UserInfo> batchGetUserInfoByUserIds(Set<Long> userIdList) {
+        return userDao.batchGetUserInfoByUserIds(userIdList);
     }
 
 }

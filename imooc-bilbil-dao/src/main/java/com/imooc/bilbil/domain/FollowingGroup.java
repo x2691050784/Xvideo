@@ -4,20 +4,29 @@ import java.util.Date;
 import java.util.List;
 
 public class FollowingGroup {
-    private Long id          ;
-    private Long userId      ;
-    private String name        ;
-    private String type        ;
-    private Date createTime  ;
-    private Date updateTime  ;
+
+    private Long id;
+
+    private Long userId;
+
+    private String name;
+
+    private String type;
+
+    private Date createTime;
+
+    private Date updateTime;
+
     private List<UserInfo> followingUserInfoList;
 
-    public List<UserInfo> getFollowingUserInfoList() {
-        return followingUserInfoList;
+    private Integer count;
+
+    public Integer getCount() {
+        return count;
     }
 
-    public void setFollowingUserInfoList(List<UserInfo> followingUserInfoList) {
-        this.followingUserInfoList = followingUserInfoList;
+    public void setCount(Integer count) {
+        this.count = count;
     }
 
     public Long getId() {
@@ -66,5 +75,13 @@ public class FollowingGroup {
 
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
+    }
+
+    public List<UserInfo> getFollowingUserInfoList() {
+        return followingUserInfoList;
+    }
+
+    public void setFollowingUserInfoList(List<UserInfo> followingUserInfoList) {
+        this.followingUserInfoList = followingUserInfoList;
     }
 }

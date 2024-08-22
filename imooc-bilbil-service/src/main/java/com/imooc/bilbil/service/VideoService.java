@@ -6,11 +6,33 @@ import com.imooc.bilbil.domain.*;
 import com.imooc.bilbil.domain.constant.UserMomentsConstant;
 import com.imooc.bilbil.domain.exception.ConditionException;
 import com.imooc.bilbil.service.util.FastDFSUtil;
+import com.imooc.bilbil.service.util.ImageUtil;
 import com.imooc.bilbil.service.util.IpUtil;
+import com.mysql.cj.x.protobuf.MysqlxCrud;
+import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.FastByIDMap;
+import org.apache.mahout.cf.taste.impl.model.GenericDataModel;
+import org.apache.mahout.cf.taste.impl.model.GenericPreference;
+import org.apache.mahout.cf.taste.impl.model.GenericUserPreferenceArray;
+import org.apache.mahout.cf.taste.impl.neighborhood.NearestNUserNeighborhood;
+import org.apache.mahout.cf.taste.impl.recommender.GenericItemBasedRecommender;
+import org.apache.mahout.cf.taste.impl.recommender.GenericUserBasedRecommender;
+import org.apache.mahout.cf.taste.impl.similarity.UncenteredCosineSimilarity;
+import org.apache.mahout.cf.taste.model.DataModel;
+import org.apache.mahout.cf.taste.model.PreferenceArray;
+import org.apache.mahout.cf.taste.neighborhood.UserNeighborhood;
+import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+import org.apache.mahout.cf.taste.recommender.Recommender;
+import org.apache.mahout.cf.taste.similarity.ItemSimilarity;
+import org.apache.mahout.cf.taste.similarity.UserSimilarity;
+import org.bytedeco.javacv.FFmpegFrameGrabber;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import eu.bitwalker.useragentutils.UserAgent;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -33,13 +55,15 @@ public class VideoService {
     @Autowired
     private FastDFSUtil fastDFSUtil;
 
-
     @Autowired
     private UserService userService;
     
 
     @Autowired
     private FileService fileService;
+
+    @Autowired
+    private ImageUtil imageUtil;
 
 
     @Autowired
@@ -52,8 +76,23 @@ public class VideoService {
     @Value("${fdfs.http.storage-addr}")
     private String fastdfsUrl;
 
+    //事务处理
+    @Transactional
+    public void addVideos(Video video) {
+        Date now = new Date();
+        video.setCreateTime(new Date());
+        videoDao.addVideos(video);
+        //保存视频标签
+        Long videoId = video.getId();
+        List<VideoTag> tagList = video.getVideoTagList();
+        tagList.forEach(item -> {
+            item.setCreateTime(now);
+            item.setVideoId(videoId);
+        });
+        videoDao.batchAddVideoTags(tagList);
 
-
+    }
+    //分页查询视频
     public PageResult<Video> pageListVideos(Integer size, Integer no, String area) {
         Map<String, Object> params = new HashMap<>();
         params.put("start", (no-1)*size);
@@ -63,46 +102,12 @@ public class VideoService {
         Integer total = videoDao.pageCountVideos(params);
         if(total > 0){
             list = videoDao.pageListVideos(params);
-            //视频封面相对路径转为绝对路径
+//            //视频封面相对路径转为绝对路径
             list.forEach(video -> video.setThumbnail(fastdfsUrl + video.getThumbnail()));
-            //统计播放量和弹幕量
-            list = this.getVideoCount(list);
+//            //统计播放量和弹幕量
+//            list = this.getVideoCount(list);
         }
         return new PageResult<>(total, list);
-    }
-
-    public List<Video> getVideoCount(List<Video> videoList){
-        if(!videoList.isEmpty()){
-            //获取视频id集合
-            Set<Long> videoIdSet = videoList.stream().map(Video :: getId)
-                    .collect(Collectors.toSet());
-            //统计播放量
-            Map<Long, Integer> viewCountMap = this.batchCountVideoView(videoIdSet);
-            //统计弹幕量
-            Map<Long, Integer> danmuCountMap = this.batchCountVideoDanmu(videoIdSet);
-            //构建返回数据
-            videoList.forEach(video -> {
-                video.setViewCount(viewCountMap.get(video.getId()));
-                video.setDanmuCount(danmuCountMap.get(video.getId()));
-            });
-        }
-        return videoList;
-    }
-
-    //统计视频播放量
-    public Map<Long, Integer>  batchCountVideoView(Set<Long> videoIdSet){
-        List<VideoViewCount> viewCount = videoDao.getVideoViewCountByVideoIds(videoIdSet);
-        return viewCount.stream()
-                .collect(Collectors.toMap(VideoViewCount::getVideoId,
-                        VideoViewCount::getCount));
-    }
-
-    //统计视频弹幕量
-    public Map<Long, Integer> batchCountVideoDanmu(Set<Long> videoIdSet){
-        List<VideoDanmuCount> danmuCount = videoDao.getVideoDanmuCountByVideoIds(videoIdSet);
-        return danmuCount.stream()
-                .collect(Collectors.toMap(VideoDanmuCount::getVideoId,
-                        VideoDanmuCount::getCount));
     }
 
     public void viewVideoOnlineBySlices(HttpServletRequest request,
@@ -112,7 +117,7 @@ public class VideoService {
             fastDFSUtil.viewVideoOnlineBySlices(request, response, url);
         }catch (Exception ignored){}
     }
-
+//    点赞视频
     public void addVideoLike(Long videoId, Long userId) {
         Video video = videoDao.getVideoById(videoId);
         if(video == null){
@@ -128,11 +133,9 @@ public class VideoService {
         videoLike.setCreateTime(new Date());
         videoDao.addVideoLike(videoLike);
     }
-
     public void deleteVideoLike(Long videoId, Long userId) {
         videoDao.deleteVideoLike(videoId, userId);
     }
-
     public Map<String, Object> getVideoLikes(Long videoId, Long userId) {
         Long count = videoDao.getVideoLikes(videoId);
         VideoLike videoLike = videoDao.getVideoLikeByVideoIdAndUserId(videoId, userId);
@@ -143,6 +146,7 @@ public class VideoService {
         return result;
     }
 
+    /*----------*/
 
     @Transactional
     public void addVideoCollection(VideoCollection videoCollection, Long userId) {
@@ -177,11 +181,9 @@ public class VideoService {
         videoCollection.setUserId(userId);
         videoDao.updateVideoCollection(videoCollection);
     }
-
     public void deleteVideoCollection(Long videoId, Long userId) {
         videoDao.deleteVideoCollection(videoId, userId);
     }
-
     public Map<String, Object> getVideoCollections(Long videoId, Long userId) {
         Long count = videoDao.getVideoCollections(videoId);
         VideoCollection videoCollection = videoDao.getVideoCollectionByVideoIdAndUserId(videoId, userId);
@@ -191,7 +193,8 @@ public class VideoService {
         result.put("like", like);
         return result;
     }
-
+    @Autowired
+    private UserCoinService userCoinService;
 
     @Transactional
     public void addVideoCoins(VideoCoin videoCoin, Long userId) {
@@ -229,7 +232,6 @@ public class VideoService {
         //更新用户当前硬币总数
         userCoinService.updateUserCoinsAmount(userId, (userCoinsAmount-amount));
     }
-
     public Map<String, Object> getVideoCoins(Long videoId, Long userId) {
         Long count = videoDao.getVideoCoinsAmount(videoId);
         VideoCoin videoCollection = videoDao.getVideoCoinByVideoIdAndUserId(videoId, userId);
@@ -314,7 +316,7 @@ public class VideoService {
     public void addVideoView(VideoView videoView, HttpServletRequest request) {
         Long userId = videoView.getUserId();
         Long videoId = videoView.getVideoId();
-        //生成clientId
+        //生成clientId--主要用于用户没有登入的情况下
         String agent = request.getHeader("User-Agent");
         UserAgent userAgent = UserAgent.parseUserAgentString(agent);
         String clientId = String.valueOf(userAgent.getId());
@@ -343,7 +345,6 @@ public class VideoService {
     public Integer getVideoViewCounts(Long videoId) {
         return videoDao.getVideoViewCounts(videoId);
     }
-
     /**
      * 基于用户的协同推荐
      * @param userId 用户id
@@ -366,28 +367,6 @@ public class VideoService {
         return videoDao.batchGetVideosByIds(itemIds);
     }
 
-    /**
-     * 基于内容的协同推荐
-     * @param userId 用户id
-     * @param itemId 参考内容id（根据该内容进行相似内容推荐）
-     * @param howMany 需要推荐的数量
-     */
-    public List<Video> recommendByItem(Long userId, Long itemId, int howMany) throws TasteException {
-        List<UserPreference> list = videoDao.getAllUserPreference();
-        //创建数据模型
-        DataModel dataModel = this.createDataModel(list);
-        //获取内容相似程度
-        ItemSimilarity similarity = new UncenteredCosineSimilarity(dataModel);
-        GenericItemBasedRecommender genericItemBasedRecommender = new GenericItemBasedRecommender(dataModel, similarity);
-        // 物品推荐相拟度，计算两个物品同时出现的次数，次数越多任务的相拟度越高
-        List<Long> itemIds = genericItemBasedRecommender.recommendedBecause(userId, itemId, howMany)
-                .stream()
-                .map(RecommendedItem::getItemID)
-                .collect(Collectors.toList());
-        //推荐视频
-        return videoDao.batchGetVideosByIds(itemIds);
-    }
-
     private DataModel createDataModel(List<UserPreference> userPreferenceList) {
         FastByIDMap<PreferenceArray> fastByIdMap = new FastByIDMap<>();
         Map<Long, List<UserPreference>> map = userPreferenceList.stream().collect(Collectors.groupingBy(UserPreference::getUserId));
@@ -404,8 +383,16 @@ public class VideoService {
         return new GenericDataModel(fastByIdMap);
     }
 
+    public List<VideoTag> getVideoTagsByVideoId(Long videoId) {
+        return videoDao.getVideoTagsByVideoId(videoId);
+    }
+
+    public void deleteVideoTags(List<Long> tagIdList, Long videoId) {
+        videoDao.deleteVideoTags(tagIdList, videoId);
+    }
+
     public List<VideoBinaryPicture> convertVideoToImage(Long videoId, String fileMd5) throws Exception{
-        com.imooc.bilibili.domain.File file = fileService.getFileByMd5(fileMd5);
+        com.imooc.bilbil.domain.File file = fileService.getFileByMd5(fileMd5);
         String filePath = "/Users/hat/tmpfile/fileForVideoId" + videoId + "." + file.getType();
         fastDFSUtil.downLoadFile(file.getUrl(), filePath);
         FFmpegFrameGrabber fFmpegFrameGrabber = FFmpegFrameGrabber.createDefault(filePath);
@@ -453,51 +440,61 @@ public class VideoService {
         return pictures;
     }
 
-    public List<VideoTag> getVideoTagsByVideoId(Long videoId) {
-        return videoDao.getVideoTagsByVideoId(videoId);
-    }
-
-    public void deleteVideoTags(List<Long> tagIdList, Long videoId) {
-        videoDao.deleteVideoTags(tagIdList, videoId);
-    }
-
-    public List<VideoBinaryPicture> getVideoBinaryImages(Map<String, Object> params) {
-        return videoDao.getVideoBinaryImages(params);
-    }
-
-    public List<Video> getVideoRecommendations(String recommendType, Long userId){
-        List<Video> list = new ArrayList<>();
-        try {
-            //根据推荐类型进行推荐：1基于用户推荐 2基于内容推荐
-            if("1".equals(recommendType)){
-                list = this.recommend(userId);
-            }else{
-                //找到用户最喜欢的视频，作为推荐的基础内容
-                List<UserPreference> preferencesList = videoDao.getAllUserPreference();
-                Optional<Long> itemIdOpt = preferencesList.stream().filter(item -> item.getUserId().equals(userId))
-                        .max(Comparator.comparing(UserPreference :: getValue)).map(UserPreference::getVideoId);
-                if(itemIdOpt.isPresent()){
-                    list = this.recommendByItem(userId, itemIdOpt.get(), DEFAULT_RECOMMEND_NUMBER);
-                }
-            }
-            //若没有计算出推荐内容，则默认查询最新视频
-            if(list.isEmpty()){
-                list = this.pageListVideos(3,1,null).getList();
-            }else{
-                list.forEach(video -> video.setThumbnail(fastdfsUrl+video.getThumbnail()));
-            }
-        }catch (Exception e){
-            throw new ConditionException("推荐失败");
+    public List<Video> getVideoCount(List<Video> videoList){
+        if(!videoList.isEmpty()){
+            //获取视频id集合
+            Set<Long> videoIdSet = videoList.stream().map(Video :: getId)
+                    .collect(Collectors.toSet());
+            //统计播放量
+            Map<Long, Integer> viewCountMap = this.batchCountVideoView(videoIdSet);
+            //统计弹幕量
+            Map<Long, Integer> danmuCountMap = this.batchCountVideoDanmu(videoIdSet);
+            //构建返回数据
+            videoList.forEach(video -> {
+                video.setViewCount(viewCountMap.get(video.getId()));
+                video.setDanmuCount(danmuCountMap.get(video.getId()));
+            });
         }
-        return list;
+
+        return videoList;
+    }
+    //统计视频播放量
+    public Map<Long, Integer>  batchCountVideoView(Set<Long> videoIdSet){
+        List<VideoViewCount> viewCount = videoDao.getVideoViewCountByVideoIds(videoIdSet);
+        return viewCount.stream()
+                .collect(Collectors.toMap(VideoViewCount::getVideoId,
+                        VideoViewCount::getCount));
     }
 
-    public List<Video> getVisitorVideoRecommendations() {
-        return this.pageListVideos(DEFAULT_RECOMMEND_NUMBER,1,null).getList();
+    //统计视频弹幕量
+    public Map<Long, Integer> batchCountVideoDanmu(Set<Long> videoIdSet){
+        List<VideoDanmuCount> danmuCount = videoDao.getVideoDanmuCountByVideoIds(videoIdSet);
+        return danmuCount.stream()
+                .collect(Collectors.toMap(VideoDanmuCount::getVideoId,
+                        VideoDanmuCount::getCount));
     }
 
-    public void addVideo(Video video) {
-    }
 
+
+
+
+
+//    public List<Video> getVideoCount(List<Video> videoList){
+//        if(!videoList.isEmpty()){
+//            //获取视频id集合
+//            Set<Long> videoIdSet = videoList.stream().map(Video :: getId)
+//                    .collect(Collectors.toSet());
+//            //统计播放量
+//            //Map<Long, Integer> viewCountMap = this.batchCountVideoView(videoIdSet);
+//            //统计弹幕量
+//            //Map<Long, Integer> danmuCountMap = this.batchCountVideoDanmu(videoIdSet);
+//            //构建返回数据
+//            videoList.forEach(video -> {
+//                video.setViewCount(viewCountMap.get(video.getId()));
+//                video.setDanmuCount(danmuCountMap.get(video.getId()));
+//            });
+//        }
+//        return videoList;
+//    }
 
 }

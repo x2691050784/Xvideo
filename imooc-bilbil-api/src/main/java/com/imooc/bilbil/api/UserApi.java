@@ -112,5 +112,10 @@ public JsonResponse<User> getUserInfo(){
         String accessToken=userService.refreshAccessToken(refreshToken);
         return new JsonResponse<>(accessToken);
     }
+    @GetMapping("/rsa-pks")
+    public JsonResponse<String> getRsaPulicKey(){
+        String pk = RSAUtil.getPublicKeyStr();
+        return new JsonResponse<>(pk);
+    }
 
 }

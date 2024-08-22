@@ -8,5 +8,5 @@ public interface FileDao {
 
     Integer addFile(File file);
 
-    java.io.File getFileByMD5(String md5);
+    File getFileByMD5(String md5);
 }

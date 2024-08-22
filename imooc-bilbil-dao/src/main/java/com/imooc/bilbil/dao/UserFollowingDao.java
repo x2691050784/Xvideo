@@ -9,13 +9,13 @@ import java.util.List;
 @Mapper
 public interface UserFollowingDao {
 
-    Integer deleteUserFollowing(@Param("userId") Long userId,@Param("followingId") Long followingId); //自动识别相关的名称
+    Integer deleteUserFollowing(@Param("userId") Long userId, @Param("followingId") Long followingId);
 
     Integer addUserFollowing(UserFollowing userFollowing);
 
-    List<UserFollowing> getUserFollowing(Long userId);
+    List<UserFollowing> getUserFollowings(Long userId);
 
     List<UserFollowing> getUserFans(Long userId);
 
-    List<UserFollowing> getUserFollowings(Long userId);
+    void updateUserFollowings(UserFollowing userFollowing);
 }

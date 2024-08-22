@@ -52,7 +52,7 @@ public class UserFollowingApi {
     @GetMapping("/user-following-groups")
     public JsonResponse<List<FollowingGroup>> getUserFollowingGroup(){
         Long userId=userSupport.getCurrentUserId();
-        List<FollowingGroup> list =userFollowingService.getUserFollowingGroup(userId);
+        List<FollowingGroup> list =userFollowingService.getUserFollowingGroups(userId);
         return new JsonResponse<>(list);
     }
 
