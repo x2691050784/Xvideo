@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-
-
-
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD MAPPER 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.imooc.bilbil.dao.AuthRoleElementOperationDao">
 
     <resultMap id="AuthElementOperationResultMap" type="com.imooc.bilbil.domain.auth.AuthRoleElementOperation">
@@ -16,7 +15,7 @@
         </association>
     </resultMap>
 
-    <select id="getRoleElementOperationByRoleIds" parameterType="java.util.Set" resultMap="AuthElementOperationResultMap">
+    <select id="getRoleElementOperationsByRoleIds" parameterType="java.util.Set" resultMap="AuthElementOperationResultMap">
         select
         areo.*,
         aeo.elementName,

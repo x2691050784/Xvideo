@@ -28,7 +28,7 @@ public class UserMomentApi
 
 
 //    发布动态
-    @ApiLimitedRole(limitedRoleCodeList = {AuthRoleConstant.ROLE_CODE_LV0})//lv0不可以发布动态
+    @ApiLimitedRole(limitedRoleCodeList = {AuthRoleConstant.ROLE_LV0})//lv0不可以发布动态
     @DataLimited//数据权限
     @PostMapping("user-moments")
     public JsonResponse<String> addUserMoments(@RequestBody UserMoment userMoment) throws MQBrokerException, RemotingException, InterruptedException, MQClientException {

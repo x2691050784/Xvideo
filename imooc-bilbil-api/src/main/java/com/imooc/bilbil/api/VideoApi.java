@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +27,6 @@ public class VideoApi {
 
     @Autowired
     private ElasticSearchService elasticSearchService;
-
 
     /**
      * 视频投稿
@@ -51,6 +51,7 @@ public class VideoApi {
         PageResult<Video> result = videoService.pageListVideos(size, no ,area);
         return new JsonResponse<>(result);
     }
+
     /**
      * 视频在线播放
      */
@@ -93,6 +94,7 @@ public class VideoApi {
         Map<String, Object> result = videoService.getVideoLikes(videoId, userId);
         return new JsonResponse<>(result);
     }
+
 
     /**
      * 收藏视频
@@ -189,6 +191,7 @@ public class VideoApi {
         Map<String, Object> result = videoService.getVideoDetails(videoId);
         return new JsonResponse<>(result);
     }
+
     /**
      * 添加视频观看记录
      */
@@ -203,6 +206,8 @@ public class VideoApi {
         }catch (Exception e){
             videoService.addVideoView(videoView, request);
         }
+        //同步更新视频播放量到Elasticsearch
+        elasticSearchService.updateVideoViewCount(videoView.getVideoId());
         return JsonResponse.success();
     }
 
@@ -214,13 +219,39 @@ public class VideoApi {
         Integer count = videoService.getVideoViewCounts(videoId);
         return new JsonResponse<>(count);
     }
+
     /**
      * 视频内容推荐
      */
-    @GetMapping("/video-recommendations")
+    @GetMapping("/recommendations")
     public JsonResponse<List<Video>> recommend() throws TasteException {
         Long userId = userSupport.getCurrentUserId();
         List<Video> list = videoService.recommend(userId);
+        return new JsonResponse<>(list);
+    }
+
+    /**
+     * 视频帧截取生成黑白剪影
+     */
+    @GetMapping("/video-frames")
+    public JsonResponse<List<VideoBinaryPicture>> captureVideoFrame(@RequestParam Long videoId,
+                                                                    @RequestParam String fileMd5) throws Exception {
+        List<VideoBinaryPicture> list = videoService.convertVideoToImage(videoId, fileMd5);
+        return new JsonResponse<>(list);
+    }
+
+    /**
+     * 查询视频黑白剪影
+     */
+    @GetMapping("/video-binary-images")
+    public JsonResponse<List<VideoBinaryPicture>> getVideoBinaryImages(@RequestParam Long videoId,
+                                                                       Long videoTimestamp,
+                                                                       String frameNo) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("videoId", videoId);
+        params.put("videoTimestamp", videoTimestamp);
+        params.put("frameNo", frameNo);
+        List<VideoBinaryPicture> list = videoService.getVideoBinaryImages(params);
         return new JsonResponse<>(list);
     }
 
@@ -245,18 +276,21 @@ public class VideoApi {
     }
 
     /**
-     * 视频帧截取生成黑白剪影
+     * 视频内容推荐(游客版)
      */
-    @GetMapping("/video-frames")
-    public JsonResponse<List<VideoBinaryPicture>> captureVideoFrame(@RequestParam Long videoId,
-                                                                    @RequestParam String fileMd5) throws Exception {
-        List<VideoBinaryPicture> list = videoService.convertVideoToImage(videoId, fileMd5);
+    @GetMapping("/visitor-video-recommendations")
+    public JsonResponse<List<Video>> getVisitorVideoRecommendations() {
+        List<Video> list = videoService.getVisitorVideoRecommendations();
         return new JsonResponse<>(list);
     }
 
-
-
-
-
-
+    /**
+     * 视频内容推荐(整合版)
+     */
+    @GetMapping("/video-recommendations")
+    public JsonResponse<List<Video>> getVideoRecommendations(@RequestParam String recommendType) {
+        Long userId = userSupport.getCurrentUserId();
+        List<Video> list = videoService.getVideoRecommendations(recommendType, userId);
+        return new JsonResponse<>(list);
+    }
 }

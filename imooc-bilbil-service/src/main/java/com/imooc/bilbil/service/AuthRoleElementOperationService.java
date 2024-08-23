@@ -10,10 +10,12 @@ import java.util.Set;
 
 @Service
 public class AuthRoleElementOperationService {
+
     @Autowired
     private AuthRoleElementOperationDao authRoleElementOperationDao;
-    public List<AuthRoleElementOperation> getRoleElementOperationByRoleIds(Set<Long> roleIdSet) {
-        return authRoleElementOperationDao.getRoleElementOperationByRoleIds(roleIdSet);
 
+    public List<AuthRoleElementOperation> getRoleElementOperationsByRoleIds(Set<Long> roleIdSet) {
+        return authRoleElementOperationDao.getRoleElementOperationsByRoleIds(roleIdSet);
     }
 }
+

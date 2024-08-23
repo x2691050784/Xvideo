@@ -13,7 +13,7 @@
              createTime
             )values
              (
-              #{contentDetail,typeHandler=com.enjoy.video.service.handler.JsonObjectTypeHandler},
+              #{contentDetail,typeHandler=com.imooc.bilbil.service.handler.JsonObjectTypeHandler},
               now()
              )
     </insert>

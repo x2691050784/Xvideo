@@ -10,10 +10,12 @@ import java.util.Set;
 
 @Service
 public class AuthRoleMenuService {
+
     @Autowired
     private AuthRoleMenuDao authRoleMenuDao;
 
-    public List<AuthRoleMenu> getAuthRoleMeunsByIds(Set<Long> roleIdSet) {
+    public List<AuthRoleMenu> getAuthRoleMenusByRoleIds(Set<Long> roleIdSet) {
         return authRoleMenuDao.getAuthRoleMenusByRoleIds(roleIdSet);
     }
 }
+

@@ -8,67 +8,81 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Mapper
-public interface VideoDao {
-    //添加视频
-    Integer addVideos(Video video);
-    //添加视频标签
-    Integer batchAddVideoTags(List<VideoTag> videoTagList);
-    /*-------*/
-//    分页查询
-    Integer pageCountVideos(Map<String, Object> params);
 
-    List<Video> pageListVideos(Map<String, Object> params);
+    @Mapper
+    public interface VideoDao {
 
-    Video getVideoById(Long id);
+        Integer addVideos(Video video);
 
-    VideoLike getVideoLikeByVideoIdAndUserId(@Param("videoId") Long videoId, @Param("userId") Long userId);
+        Integer batchAddVideoTags(List<VideoTag> videoTagList);
 
-    Integer addVideoLike(VideoLike videoLike);
+        Integer pageCountVideos(Map<String, Object> params);
 
-    Integer deleteVideoLike(@Param("videoId") Long videoId,
-                            @Param("userId") Long userId);
+        List<Video> pageListVideos(Map<String, Object> params);
 
-    Long getVideoLikes(Long videoId);
+        Video getVideoById(Long id);
 
-    Integer deleteVideoCollection(@Param("videoId") Long videoId,
-                                  @Param("userId") Long userId);
+        VideoLike getVideoLikeByVideoIdAndUserId(@Param("videoId") Long videoId, @Param("userId") Long userId);
 
-    Integer addVideoCollection(VideoCollection videoCollection);
+        Integer addVideoLike(VideoLike videoLike);
 
+        Integer deleteVideoLike(@Param("videoId") Long videoId,
+                                @Param("userId") Long userId);
 
+        Long getVideoLikes(Long videoId);
 
-    void updateVideoCollection(VideoCollection videoCollection);
+        Integer deleteVideoCollection(@Param("videoId") Long videoId,
+                                      @Param("userId") Long userId);
 
-    Long getVideoCollections(Long videoId);
+        Integer addVideoCollection(VideoCollection videoCollection);
 
-    VideoCollection getVideoCollectionByVideoIdAndUserId(Long videoId, Long userId);
-    VideoCoin getVideoCoinByVideoIdAndUserId(@Param("videoId") Long videoId,
-                                             @Param("userId") Long userId);
+        Long getVideoCollections(Long videoId);
 
-    Integer addVideoCoin(VideoCoin videoCoin);
-    Integer updateVideoCoin(VideoCoin videoCoin);
-    Long getVideoCoinsAmount(Long videoId);
-    Integer addVideoComment(VideoComment videoComment);
-    Integer pageCountVideoComments(Map<String, Object> params);
-    List<VideoComment> pageListVideoComments(Map<String, Object> params);
-    List<VideoComment> batchGetVideoCommentsByRootIds(@Param("rootIdList") List<Long> rootIdList);
-/*---------*/
-    Video getVideoDetails(Long videoId);
-    VideoView getVideoView(Map<String, Object> params);
-    Integer addVideoView(VideoView videoView);
-    Integer getVideoViewCounts(Long videoId);
-    List<UserPreference> getAllUserPreference();
-    List<Video> batchGetVideosByIds(@Param("idList") List<Long> idList);
+        VideoCollection getVideoCollectionByVideoIdAndUserId(@Param("videoId") Long videoId,
+                                                             @Param("userId") Long userId);
 
-/*--------*/
-List<VideoTag> getVideoTagsByVideoId(Long videoId);
-    Integer deleteVideoTags(@Param("tagIdList") List<Long> tagIdList,
-                            @Param("videoId") Long videoId);
+        VideoCoin getVideoCoinByVideoIdAndUserId(@Param("videoId") Long videoId,
+                                                 @Param("userId") Long userId);
 
-    Integer batchAddVideoBinaryPictures(@Param("pictureList") List<VideoBinaryPicture> pictureList);
+        Integer addVideoCoin(VideoCoin videoCoin);
 
-    List<VideoViewCount> getVideoViewCountByVideoIds(Set<Long> videoIds);
+        Integer updateVideoCoin(VideoCoin videoCoin);
 
-    List<VideoDanmuCount> getVideoDanmuCountByVideoIds(Set<Long> videoIds);
-}
+        Long getVideoCoinsAmount(Long videoId);
+
+        Integer addVideoComment(VideoComment videoComment);
+
+        Integer pageCountVideoComments(Map<String, Object> params);
+
+        List<VideoComment> pageListVideoComments(Map<String, Object> params);
+
+        List<VideoComment> batchGetVideoCommentsByRootIds(@Param("rootIdList") List<Long> rootIdList);
+
+        Video getVideoDetails(Long videoId);
+
+        Integer addVideoView(VideoView videoView);
+
+        Integer getVideoViewCounts(Long videoId);
+
+        VideoView getVideoView(Map<String, Object> params);
+
+        List<UserPreference> getAllUserPreference();
+
+        List<Video> batchGetVideosByIds(@Param("idList") List<Long> idList);
+
+        Integer batchAddVideoBinaryPictures(@Param("pictureList") List<VideoBinaryPicture> pictureList);
+
+        List<VideoTag> getVideoTagsByVideoId(Long videoId);
+
+        Integer deleteVideoTags(@Param("tagIdList") List<Long> tagIdList,
+                                @Param("videoId") Long videoId);
+
+        List<VideoBinaryPicture> getVideoBinaryImages(Map<String, Object> params);
+
+        List<VideoViewCount> getVideoViewCountByVideoIds(Set<Long> videoIds);
+
+        List<VideoDanmuCount> getVideoDanmuCountByVideoIds(Set<Long> videoIds);
+
+        void updateVideoCollection(VideoCollection videoCollection);
+    }
+
