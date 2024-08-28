@@ -80,46 +80,71 @@ public class FastDFSUtil {
     }
 
     public String uploadFileBySlices(MultipartFile file, String fileMd5, Integer sliceNo, Integer totalSliceNo) throws Exception {
+        //先判断文件有没有异常
         if(file == null || sliceNo == null || totalSliceNo == null){
             throw new ConditionException("参数异常！");
         }
+        //key
         String pathKey = PATH_KEY + fileMd5;
+        //偏移量是根据大小确认的
         String uploadedSizeKey = UPLOADED_SIZE_KEY + fileMd5;
+        //多少个分片了
         String uploadedNoKey = UPLOADED_NO_KEY + fileMd5;
+
+        //用redis key获取value得到大小
         String uploadedSizeStr = redisTemplate.opsForValue().get(uploadedSizeKey);
+        //初始值
         Long uploadedSize = 0L;
+
+        //开始有没有uploadedSizeStr值(redis文件大值)，如果有了重新把初始值给替代
         if(!StringUtil.isNullOrEmpty(uploadedSizeStr)){
             uploadedSize = Long.valueOf(uploadedSizeStr);
         }
-        if(sliceNo == 1){ //上传的是第一个分片
+
+        //判断是第几片了
+        if(sliceNo == 1){ //上传的是第一个分片，做一个区分，第一份是用uploadAppenderFile其他是modifyAppenderFile方法
+            //上传，返回一个路径
             String path = this.uploadAppenderFile(file);
+            //看看有没有上传失败
             if(StringUtil.isNullOrEmpty(path)){
                 throw new ConditionException("上传失败！");
             }
+            //上传成功，存进去
             redisTemplate.opsForValue().set(pathKey, path);
             redisTemplate.opsForValue().set(uploadedNoKey, "1");
         }else{
+            //如果不是第一段
+            //先在redis找路径
             String filePath = redisTemplate.opsForValue().get(pathKey);
+            //看看之前保存的有没有值
             if(StringUtil.isNullOrEmpty(filePath)){
                 throw new ConditionException("上传失败！");
             }
+            //使用续传
             this.modifyAppenderFile(file, filePath, uploadedSize);
+            //redis里加一
             redisTemplate.opsForValue().increment(uploadedNoKey);
         }
-        // 修改历史上传分片文件大小
+        // 修改历史上传分片文件大小(补上大小)，初始是0
         uploadedSize  += file.getSize();
         redisTemplate.opsForValue().set(uploadedSizeKey, String.valueOf(uploadedSize));
+
+
         //如果所有分片全部上传完毕，则清空redis里面相关的key和value
         String uploadedNoStr = redisTemplate.opsForValue().get(uploadedNoKey);
         Integer uploadedNo = Integer.valueOf(uploadedNoStr);
+        //清空地址
         String resultPath = "";
+        //如果段数相同
         if(uploadedNo.equals(totalSliceNo)){
             resultPath = redisTemplate.opsForValue().get(pathKey);
+            //用redis的列表删除
             List<String> keyList = Arrays.asList(uploadedNoKey, pathKey, uploadedSizeKey);
             redisTemplate.delete(keyList);
         }
         return resultPath;
     }
+
 
     public void convertFileToSlices(MultipartFile multipartFile) throws Exception{
         String fileType = this.getFileType(multipartFile);

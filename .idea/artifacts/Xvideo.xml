@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Xvideo">
+    <output-path>$PROJECT_DIR$/out/artifacts/Xvideo</output-path>
+    <root id="archive" name="Xvideo.jar">
+      <element id="module-output" name="imooc-bilbil-api" />
+      <element id="module-output" name="imooc-bilbil-dao" />
+      <element id="module-output" name="imooc-bilbil-service" />
+    </root>
+  </artifact>
+</component>
