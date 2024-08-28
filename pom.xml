@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>imooc-bilbil</artifactId>
+    <artifactId>xie-xvideo</artifactId>
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
 
@@ -176,9 +176,9 @@
     </dependencies>
 
     <modules>
-        <module>imooc-bilbil-api</module>
-        <module>imooc-bilbil-service</module>
-        <module>imooc-bilbil-dao</module>
+        <module>xie-xvideo-api</module>
+        <module>xie-xvideo-service</module>
+        <module>xie-xvideo-dao</module>
         <module>test</module>
     </modules>
 
